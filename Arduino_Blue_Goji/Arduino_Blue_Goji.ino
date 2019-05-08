@@ -75,7 +75,7 @@ void loop() {
   potDesRaw = analogRead(ResistanceCTRL);
   potDesRawMap = map(potDesRaw, 0, 1023, 0, 255);
   analogWrite(signal2belt, potDesRawMap); //Send signal to belt
-  potDes = map(potDesRaw, 0, 1023, potMin, potMax); //Pot controlled Resistance
+  potDes = map(potDesRaw, 0, 1023, potMax, potMin); //Pot controlled Resistance
   //Serial.println(count);
   resistance = analogRead(motorPot);
   
