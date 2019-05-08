@@ -8,21 +8,25 @@ int motorPot = 1;
 int ResistanceCTRL = 5;
 
 //Motor Parameters
-//int potMin = 0; //Determine this reading from the bike
+int potMin = 0; //Determine this reading from the bike
+int potMax = 425;
 //double potMaxV = 1.67; //Determine this reading from the bike
 //int potMax = potMaxV/5*1023; //potMaxV in terms of 1024 analog reading (max around 360)
-int potMin = 290;
-int potMax = 590;
+//int potMin = 290;
+//int potMax = 590;
 int potDesRaw;
 int potDesRawMap;
 double potDes; //Resistance value here
-double tol = 5; //Resistance pot reading error tolerance
+double tol = 8; //Resistance pot reading error tolerance
+
+//Blue Goji Variables
+int resInputMax = 438;
 
 //Variables
 int resistance;
 int timeHigh;
 int timeLow;
-int PWM = 100; //values 0-255
+int PWM = 115; //values 0-255
 
 //Pedal Velocity Calculations//
 
@@ -48,7 +52,7 @@ void isr() { //increment or decrement the encoder count if channel changes
 
 void calcSpeed() {
     intervalCount = count - previousCount;
-    pedalSpeed = intervalCount*60000/8 /interval; //Revolutions per interval(1000 msec) times 60000 millisec = RPM
+    pedalSpeed = intervalCount/(8* interval) * 60000; //Revolutions per interval(1000 msec) times 60000 millisec = RPM
     previousCount = count;
     previousTime = currentTime;
 }
@@ -75,15 +79,16 @@ void loop() {
   potDesRaw = analogRead(ResistanceCTRL);
   potDesRawMap = map(potDesRaw, 0, 1023, 0, 255);
   analogWrite(signal2belt, potDesRawMap); //Send signal to belt
-  potDes = map(potDesRaw, 0, 1023, potMax, potMin); //Pot controlled Resistance
+//  potDes = map(potDesRaw, 0, 1023, potMin, potMax); //Pot controlled Resistance
+  potDes = map(potDesRaw, 0, resInputMax, potMin, potMax);
   //Serial.println(count);
   resistance = analogRead(motorPot);
   
-  if (resistance <= potDes - tol && resistance >= potMin){
+  if (resistance <= potDes - tol && resistance <= potMax){
     analogWrite(dcMotorPWMA,0);
     analogWrite(dcMotorPWMB,PWM);
   }
-  else if (resistance >= potDes + tol && resistance <= potMax){
+  else if (resistance >= potDes + tol && resistance >= potMin){
     analogWrite(dcMotorPWMA,PWM);
     analogWrite(dcMotorPWMB,0);
   }
