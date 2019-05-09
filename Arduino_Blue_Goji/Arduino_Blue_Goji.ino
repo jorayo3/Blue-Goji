@@ -50,19 +50,74 @@ void isr() { //increment or decrement the encoder count if channel changes
 }
 
 
-void calcSpeed() {
-    intervalCount = count - previousCount;
-    pedalSpeed = intervalCount/(8* interval) * 60000; //Revolutions per interval(1000 msec) times 60000 millisec = RPM
-    previousCount = count;
-    previousTime = currentTime;
-}
+//void calcSpeed() {
+//    intervalCount = count - previousCount;
+//    pedalSpeed = intervalCount/(8* interval) * 60000; //Revolutions per interval(1000 msec) times 60000 millisec = RPM
+//    previousCount = count;
+//    previousTime = currentTime;
+//}
 
 //End Pedal Velocity Calculations// 
 
+//Blue Goji Connection
+int readPin = 2;
+int connectState = 0;
+String readString;
+
+void BlueGojiIntegration() {
+    if(connectState==0)
+  {
+    Serial.println("500465ef-1f5b-4778-a301-e6a603b32a0f");
+    delay(1000);
+    readString="";
+    if (Serial.available() >0) {
+      while (Serial.available()) {
+        delay(3);
+        if (Serial.available() >0) {
+          char c = Serial.read(); 
+          readString += c; 
+        } 
+      }
+    }
+    if(readString=="b003013d-e842-4aec-8c85-16fef6201286\n")
+    {
+      connectState=1;
+    }
+  }
+  else if(connectState==1)
+  {      
+    //Serial.println("connected");
+    int sb = analogRead(readPin);
+    sb = map(sb, 0, 1023, 0, 255);
+    Serial.print("S");
+    Serial.println(sb);
+    
+    delay(100);
+
+    if (Serial.available() >0) {
+      readString="";
+      while (Serial.available()) {
+        delay(3);
+        if (Serial.available() >0) {
+          char c = Serial.read(); 
+          readString += c; 
+        } 
+      }
+      if(readString[0]=='r')//reset
+      {
+        connectState=0;
+        return;
+      }
+      Serial.println("speed:"+ readString);
+    }
+    int foo = readString.toInt();
+    analogWrite(3, foo % 255);
+  }
+}
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(57600);
+  Serial.begin(9600);
   pinMode(motorPot, INPUT);
 
   //Pedal Velocity Setup
@@ -72,9 +127,11 @@ void setup() {
 
 void loop() {
   //Pedal Velocity Calculation//
-  currentTime = millis();
-  if (currentTime - previousTime >= interval) {calcSpeed();} //Every interval (1second right now), calculate speed
+//  currentTime = millis();
+//  if (currentTime - previousTime >= interval) {calcSpeed();} //Every interval (1second right now), calculate speed
   //End Pedal Velocity Calculation//
+
+  BlueGojiIntegration();
 
   potDesRaw = analogRead(ResistanceCTRL);
   potDesRawMap = map(potDesRaw, 0, 1023, 0, 255);
@@ -97,21 +154,21 @@ void loop() {
     analogWrite(dcMotorPWMB,0);
   }
 
-  //LOGGER
- Serial.print("COUNT: ");
- Serial.print(count);
- Serial.print("  CurrTime: ");
- Serial.print(currentTime);
- Serial.print("  IntervalCount: ");
- Serial.print(intervalCount);
- Serial.print("  Motor Pot: ");
- Serial.print(resistance);
- Serial.print("  Desired MotorPos: ");
- Serial.print(potDes);
- Serial.print("  potDesRaw: ");
- Serial.print(potDesRaw);
- Serial.print("  potDesRawMap: ");
- Serial.print(potDesRawMap);
- Serial.print("  PedalSpeed: ");
- Serial.println(pedalSpeed);
+//  //LOGGER
+// Serial.print("COUNT: ");
+// Serial.print(count);
+// Serial.print("  CurrTime: ");
+// Serial.print(currentTime);
+// Serial.print("  IntervalCount: ");
+// Serial.print(intervalCount);
+// Serial.print("  Motor Pot: ");
+// Serial.print(resistance);
+// Serial.print("  Desired MotorPos: ");
+// Serial.print(potDes);
+// Serial.print("  potDesRaw: ");
+// Serial.print(potDesRaw);
+// Serial.print("  potDesRawMap: ");
+// Serial.print(potDesRawMap);
+// Serial.print("  PedalSpeed: ");
+// Serial.println(pedalSpeed);
 }
