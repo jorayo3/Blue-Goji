@@ -13,7 +13,7 @@ int potMax = 425;
 //double potMaxV = 1.67; //Determine this reading from the bike
 //int potMax = potMaxV/5*1023; //potMaxV in terms of 1024 analog reading (max around 360)
 //int potMin = 290;
-//int potMax = 590;
+//int potMax = 590;f
 int potDesRaw;
 int potDesRawMap;
 double potDes; //Resistance value here
@@ -60,8 +60,9 @@ void isr() { //increment or decrement the encoder count if channel changes
 //End Pedal Velocity Calculations// 
 
 //Blue Goji Connection
-int readPin = 2;
+int SteerPot = 2;
 int connectState = 0;
+int BGSpeed;
 String readString;
 
 void BlueGojiIntegration() {
@@ -87,7 +88,7 @@ void BlueGojiIntegration() {
   else if(connectState==1)
   {      
     //Serial.println("connected");
-    int sb = analogRead(readPin);
+    int sb = analogRead(SteerPot);
     sb = map(sb, 0, 1023, 0, 255);
     Serial.print("S");
     Serial.println(sb);
@@ -107,11 +108,17 @@ void BlueGojiIntegration() {
       {
         connectState=0;
         return;
+      } else if(readString[0] == 'L')
+      {
+        //Liang's Code
+      } else 
+      {
+        BGSpeed = readString.toDouble();
       }
       Serial.println("speed:"+ readString);
     }
-    int foo = readString.toInt();
-    analogWrite(3, foo % 255);
+    //int foo = readString.toInt();
+    //analogWrite(3, foo % 255);
   }
 }
 
